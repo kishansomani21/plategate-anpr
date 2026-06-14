@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0f17" />
+<title>PlateGate — ANPR Free-Parking System</title>
+<style>
+  :root{
+    --bg:#0b0f17;--panel:#121826;--panel2:#0e1421;--line:#1f2a3d;
+    --ink:#eaf0fb;--mut:#8a99b5;--acc:#33d6a6;--acc2:#ffb020;--red:#ff5470;--blue:#5b8cff;
+    --glow:0 0 0 1px rgba(91,140,255,.15), 0 18px 50px -12px rgba(0,0,0,.7);
+    --mono:"SFMono-Regular",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--sans);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased;
+    background:radial-gradient(1200px 600px at 80% -10%, rgba(91,140,255,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%, rgba(51,214,166,.08), transparent 55%),var(--bg);}
+  a{color:var(--blue);text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--acc);margin:0 0 10px}
+  h1,h2,h3{line-height:1.13;margin:0}
+  .mut{color:var(--mut)}
+
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);background:rgba(11,15,23,.74);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:16px;height:56px}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.02em;font-size:16px}
+  .logo .dot{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--acc),var(--blue));display:grid;place-items:center;font-size:13px;color:#04130d;font-weight:900}
+  nav .links{margin-left:auto;display:flex;gap:20px;font-size:14px;overflow-x:auto}
+  nav .links a{color:var(--mut);white-space:nowrap}
+  nav .links a:active{color:var(--ink)}
+
+  header{padding:54px 0 26px}
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:38px;align-items:center}
+  .hero h1{font-size:clamp(30px,7vw,46px);letter-spacing:-.03em;font-weight:850}
+  .hero h1 .hl{background:linear-gradient(90deg,var(--acc),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lead{font-size:clamp(15px,4vw,18px);color:var(--mut);margin:16px 0 24px;max-width:48ch}
+  .cta{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{padding:13px 18px;border-radius:12px;font-weight:650;font-size:15px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;transition:.15s;min-height:46px}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(135deg,var(--acc),#1ea97f);color:#04130d;border:none}
+  .stats{display:flex;gap:24px;margin-top:28px;flex-wrap:wrap}
+  .stat .n{font-size:22px;font-weight:800}
+  .stat .l{font-size:11px;color:var(--mut);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase}
+
+  /* 3D CAMERA */
+  .stage{perspective:1200px;display:grid;place-items:center;min-height:300px}
+  .cam{position:relative;width:280px;height:160px;transform-style:preserve-3d;animation:spin 15s linear infinite}
+  @keyframes spin{0%{transform:rotateX(-12deg) rotateY(-30deg)}50%{transform:rotateX(-12deg) rotateY(30deg)}100%{transform:rotateX(-12deg) rotateY(-30deg)}}
+  .face{position:absolute;border:1px solid #2a3650;background:linear-gradient(160deg,#1a2336,#0d1320);box-shadow:inset 0 0 30px rgba(0,0,0,.5)}
+  .f-front{width:280px;height:160px;border-radius:18px;transform:translateZ(52px);overflow:hidden}
+  .f-back{width:280px;height:160px;border-radius:18px;transform:translateZ(-52px) rotateY(180deg)}
+  .f-right{width:104px;height:160px;left:176px;border-radius:6px;transform:rotateY(90deg) translateZ(176px)}
+  .f-left{width:104px;height:160px;border-radius:6px;transform:rotateY(-90deg) translateZ(52px)}
+  .f-top{width:280px;height:104px;border-radius:6px;transform:rotateX(90deg) translateZ(52px)}
+  .f-bot{width:280px;height:104px;border-radius:6px;transform:rotateX(-90deg) translateZ(108px)}
+  .lens{position:absolute;top:34px;left:30px;width:88px;height:88px;border-radius:50%;
+    background:radial-gradient(circle at 38% 32%,#48618f,#0a1a2b 58%,#020608 100%);
+    border:6px solid #161e2e;box-shadow:0 0 24px rgba(91,140,255,.35),inset 0 0 22px #000}
+  .lens::after{content:"";position:absolute;top:16px;left:20px;width:18px;height:13px;border-radius:50%;background:rgba(255,255,255,.32);filter:blur(2px)}
+  .ir{position:absolute;top:28px;right:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .ir b{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#ff6a6a,#7a0d0d);box-shadow:0 0 8px #ff5a5a;animation:irp 2.4s ease-in-out infinite}
+  .ir b:nth-child(2n){animation-delay:.4s}.ir b:nth-child(3n){animation-delay:.8s}
+  @keyframes irp{0%,100%{opacity:.45}50%{opacity:1}}
+  .brand{position:absolute;bottom:13px;left:30px;font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:#6f86b3}
+  .status-led{position:absolute;bottom:15px;right:26px;width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc);animation:blink 1.8s infinite}
+  @keyframes blink{0%,70%{opacity:1}85%{opacity:.2}100%{opacity:1}}
+  .mount{position:absolute;left:120px;top:155px;width:38px;height:54px;background:linear-gradient(#222c40,#0c1220);transform:rotateX(-12deg);border-radius:0 0 6px 6px;border:1px solid #2a3650}
+
+  section{padding:44px 0;border-top:1px solid var(--line)}
+  .sec-head{max-width:62ch;margin-bottom:26px}
+  .sec-head h2{font-size:clamp(24px,6vw,30px);letter-spacing:-.02em}
+  .sec-head p{color:var(--mut);margin-top:9px}
+
+  /* STEPS */
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
+  .step .num{font-family:var(--mono);color:var(--blue);font-size:13px}
+  .step h4{margin:8px 0 6px;font-size:15px}.step p{font-size:13px;color:var(--mut);margin:0}
+
+  /* ===== INSTALL / REAL ROAD SCENE ===== */
+  .scene-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--glow)}
+  .scene-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .stab{font-family:var(--mono);font-size:12px;padding:8px 13px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--mut);cursor:pointer}
+  .stab.on{background:#10243a;border-color:#34507f;color:var(--ink)}
+  .svgbox{width:100%;border-radius:12px;overflow:hidden;background:#070b12;border:1px solid var(--line)}
+  svg{display:block;width:100%;height:auto}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--mut)}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:middle}
+
+  .mountgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+  .mtile{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:15px}
+  .mtile .mi{font-size:22px}.mtile h4{margin:8px 0 5px;font-size:14px}.mtile p{font-size:12.5px;color:var(--mut);margin:0}
+
+  /* SIM */
+  .sim{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--glow)}
+  .road{position:relative;height:150px;border-radius:14px;overflow:hidden;background:linear-gradient(#0c1220,#0a0f1a);border:1px solid var(--line)}
+  .lane{position:absolute;left:0;right:0;top:50%;height:2px;background:repeating-linear-gradient(90deg,#33415c 0 26px,transparent 26px 52px);transform:translateY(-50%)}
+  .gantry{position:absolute;left:50%;top:0;bottom:0;width:2px;background:#2a3650;transform:translateX(-50%)}
+  .gantry .gcam{position:absolute;top:6px;left:-13px;width:28px;height:18px;background:linear-gradient(#1a2336,#0d1320);border:1px solid #34507f;border-radius:4px}
+  .gantry .beam{position:absolute;top:24px;left:-60px;width:124px;height:118px;background:linear-gradient(#5b8cff22,transparent);clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);opacity:0;transition:.2s}
+  .scan .beam{opacity:1}
+  .car{position:absolute;top:50%;left:-90px;transform:translateY(-50%);width:78px;height:34px;transition:left 2.6s cubic-bezier(.45,0,.3,1)}
+  .car .body{position:absolute;inset:0;background:linear-gradient(#e9eef9,#aab6cf);border-radius:9px 13px 7px 7px;box-shadow:0 6px 14px rgba(0,0,0,.5)}
+  .car .roof{position:absolute;top:-9px;left:18px;width:40px;height:14px;background:#cdd6e8;border-radius:8px 8px 0 0}
+  .car .plate{position:absolute;bottom:5px;right:4px;background:#f7d038;color:#111;font-family:var(--mono);font-weight:700;font-size:9px;padding:1px 3px;border-radius:2px}
+  .car .wheel{position:absolute;bottom:-5px;width:14px;height:14px;background:#10151f;border:3px solid #2a3650;border-radius:50%}
+  .car .w1{left:9px}.car .w2{right:9px}
+  .capture{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#04130d;border:1px solid var(--acc);color:var(--acc);font-family:var(--mono);font-size:12px;padding:4px 10px;border-radius:8px;opacity:0;transition:.2s}
+  .capture.show{opacity:1}
+  .panelgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  .tile{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:15px}
+  .tile .lab{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .tile .big{font-size:28px;font-weight:800;margin-top:6px}
+  .verdict{margin-top:7px;font-weight:700;font-size:13.5px}
+  .ok{color:var(--acc)}.charge{color:var(--red)}.idle{color:var(--mut)}
+  .simbtns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .log{margin-top:14px;background:#070b12;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-family:var(--mono);font-size:12px;color:#9fb3d6;max-height:150px;overflow:auto}
+  .log .t{color:#5b7299}.log .g{color:var(--acc)}.log .a{color:var(--acc2)}.log .r{color:var(--red)}
+  input[type=range]{width:100%;margin-top:8px;accent-color:var(--blue)}
+
+  /* CARDS / BOM */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .card h3{font-size:16px;display:flex;align-items:center;gap:9px}
+  .card h3 .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#0e1726;border:1px solid var(--line);font-size:15px}
+  .card ul{margin:13px 0 0;padding:0;list-style:none}
+  .card li{font-size:13px;padding:7px 0;border-bottom:1px dashed #1a2436;color:#c4d0e6;display:flex;justify-content:space-between;gap:10px}
+  .card li:last-child{border:0}
+  .card li span{color:var(--mut);font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+  .tag{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:20px;border:1px solid var(--line);color:var(--mut);margin-left:6px}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);background:var(--panel2)}
+  td .pill{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:20px}
+  .pill.good{background:#0f2a20;color:var(--acc)}.pill.mid{background:#2a2410;color:var(--acc2)}.pill.bad{background:#2a1018;color:var(--red)}
+  .vref{font-family:var(--mono);font-size:10px;color:var(--acc);border:1px solid #1d3a2e;border-radius:5px;padding:1px 5px;margin-left:6px}
+
+  .note{background:#10182a;border:1px solid #233354;border-left:3px solid var(--acc2);border-radius:10px;padding:14px 16px;font-size:13.5px;color:#cdd9ef;margin-top:18px}
+  .note b{color:var(--acc2)}
+  .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  footer{padding:36px 0 60px;border-top:1px solid var(--line);color:var(--mut);font-size:12.5px}
+
+  @media(max-width:860px){
+    .hero{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr 1fr}
+    .cards{grid-template-columns:1fr}
+    .panelgrid{grid-template-columns:1fr}
+    .mountgrid{grid-template-columns:1fr 1fr}
+    nav .links{gap:14px}
+    .stage{order:-1;min-height:230px}
+    .cam{width:230px;height:132px}
+    table{font-size:12.5px}
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <div class="logo"><span class="dot">P</span> PlateGate</div>
+  <div class="links">
+    <a href="#how">How</a>
+    <a href="#install">Install</a>
+    <a href="#demo">Demo</a>
+    <a href="#need">Kit</a>
+    <a href="#tech">AI</a>
+    <a href="#legal">UK&nbsp;rules</a>
+    <a href="#cost">Costs</a>
+  </div>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="hero">
+    <div>
+      <p class="eyebrow">ANPR · Free-period parking enforcement</p>
+      <h1>Free for the first <span class="hl">30 minutes</span>.<br>Pay only if you overstay.</h1>
+      <p class="lead">A small smart camera on a pole reads every number plate driving in and driving out, times the stay, and automatically raises a charge only against drivers who overstay the free window — no barriers, no tickets, no staff on site.</p>
+      <div class="cta">
+        <button class="btn primary" onclick="go('demo')">▶ Run the live demo</button>
+        <button class="btn" onclick="go('install')">See it on a real road</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n">98–99%</div><div class="l">Plate read accuracy</div></div>
+        <div class="stat"><div class="n">~250ms</div><div class="l">Read time on edge</div></div>
+        <div class="stat"><div class="n">1 unit</div><div class="l">Per entry/exit lane</div></div>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="cam">
+        <div class="face f-back"></div><div class="face f-left"></div><div class="face f-right"></div>
+        <div class="face f-top"></div><div class="face f-bot"></div>
+        <div class="face f-front">
+          <div class="lens"></div>
+          <div class="ir"><b></b><b></b><b></b><b></b><b></b><b></b></div>
+          <div class="brand">PLATEGATE · PG-1</div><div class="status-led"></div>
+        </div>
+        <div class="mount"></div>
+      </div>
+    </div>
+  </div>
+</div></header>
+
+<!-- HOW -->
+<section id="how"><div class="wrap">
+  <div class="sec-head"><p class="eyebrow">The principle</p><h2>Two reads and a stopwatch</h2>
+    <p>The whole system is one idea done reliably: read the plate on the way in, read it again on the way out, subtract the two timestamps, and apply your free-period rule.</p></div>
+  <div class="steps">
+    <div class="step"><div class="num">01</div><h4>Arrive</h4><p>Vehicle approaches. The unit is always watching; the IR illuminator handles night.</p></div>
+    <div class="step"><div class="num">02</div><h4>Read &amp; log</h4><p>ANPR extracts the plate and writes a timestamped <b>entry</b> record.</p></div>
+    <div class="step"><div class="num">03</div><h4>Park free</h4><p>The free window runs (e.g. 30 min). The driver does nothing at all.</p></div>
+    <div class="step"><div class="num">04</div><h4>Leave</h4><p>The exit read pairs to the entry by matching the same plate.</p></div>
+    <div class="step"><div class="num">05</div><h4>Decide</h4><p>Within the window → no charge. Over it → a charge against the keeper.</p></div>
+  </div>
+</div></section>
+
+<!-- ===== INSTALL: REAL ROAD ===== -->
+<section id="install"><div class="wrap">
+  <div class="sec-head"><p class="eyebrow">Where it goes · how it's fitted</p><h2>On a real road, at the entrance</h2>
+    <p>Switch between the views below. The camera mounts <b>low and beside the lane</b> (about 0.8–1.5&nbsp;m off the ground) so it looks straight at number plates — not high up like CCTV. Keep the plate within roughly 30° left/right and 30° up/down of the lens and reads stay reliable day and night.</p></div>
+
+  <div class="scene-card">
+    <div class="scene-tabs">
+      <button class="stab on" data-v="side" onclick="setView('side')">↔ Side view (mounting height &amp; angle)</button>
+      <button class="stab" data-v="top" onclick="setView('top')">⤢ Top-down (entry &amp; exit lanes)</button>
+      <button class="stab" data-v="street" onclick="setView('street')">🚗 Street scene (what you'd see)</button>
+    </div>
+
+    <!-- SIDE VIEW -->
+    <div class="svgbox" id="v-side">
+      <svg viewBox="0 0 900 360" role="img" aria-label="Side view of ANPR camera mounting">
+        <defs>
+          <linearGradient id="skyS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e1626"/><stop offset="1" stop-color="#0a0f1a"/></linearGradient>
+          <linearGradient id="beamS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#33d6a6" stop-opacity=".5"/><stop offset="1" stop-color="#33d6a6" stop-opacity="0"/></linearGradient>
+        </defs>
+        <rect width="900" height="360" fill="url(#skyS)"/>
+        <!-- ground -->
+        <rect x="0" y="280" width="900" height="80" fill="#11161f"/>
+        <line x1="0" y1="280" x2="900" y2="280" stroke="#2a3650" stroke-width="2"/>
+        <!-- pole -->
+        <rect x="120" y="120" width="14" height="160" rx="3" fill="#1a2336" stroke="#2a3650"/>
+        <rect x="96" y="276" width="62" height="8" rx="2" fill="#222c40"/>
+        <!-- camera on pole at ~1.2m -->
+        <g>
+          <rect x="118" y="150" width="64" height="40" rx="8" fill="#16203a" stroke="#34507f"/>
+          <circle cx="176" cy="170" r="11" fill="#0a1a2b" stroke="#5b8cff" stroke-width="2"/>
+          <text x="120" y="146" fill="#8a99b5" font-family="monospace" font-size="12">PG-1 camera</text>
+        </g>
+        <!-- height dimension -->
+        <line x1="150" y1="170" x2="150" y2="280" stroke="#ffb020" stroke-dasharray="4 4"/>
+        <text x="158" y="232" fill="#ffb020" font-family="monospace" font-size="13">≈ 1.2 m</text>
+        <!-- capture beam to plate -->
+        <polygon points="184,168 560,250 560,272 184,184" fill="url(#beamS)"/>
+        <!-- car -->
+        <g transform="translate(520,236)">
+          <rect x="0" y="6" width="150" height="40" rx="9" fill="#cdd6e8"/>
+          <rect x="28" y="-12" width="86" height="24" rx="9" fill="#aab6cf"/>
+          <rect x="-6" y="34" width="40" height="16" rx="3" fill="#f7d038" stroke="#111"/>
+          <text x="-2" y="46" font-family="monospace" font-size="10" fill="#111" font-weight="bold">LM26</text>
+          <circle cx="30" cy="50" r="13" fill="#10151f" stroke="#2a3650" stroke-width="4"/>
+          <circle cx="120" cy="50" r="13" fill="#10151f" stroke="#2a3650" stroke-width="4"/>
+        </g>
+        <text x="520" y="316" fill="#33d6a6" font-family="monospace" font-size="12">plate height ≈ 0.5 m — camera aims slightly down at it</text>
+        <!-- angle arc -->
+        <path d="M184 176 q40 4 60 22" fill="none" stroke="#5b8cff" stroke-dasharray="3 3"/>
+        <text x="210" y="172" fill="#5b8cff" font-family="monospace" font-size="12">≤ 30° tilt</text>
+        <!-- power note -->
+        <text x="20" y="330" fill="#8a99b5" font-family="monospace" font-size="12">↑ one PoE cable up the pole = power + data, or 12V + 4G if no cabling</text>
+      </svg>
+    </div>
+
+    <!-- TOP VIEW -->
+    <div class="svgbox" id="v-top" style="display:none">
+      <svg viewBox="0 0 900 360" role="img" aria-label="Top-down view of entry and exit lanes">
+        <rect width="900" height="360" fill="#0a0f1a"/>
+        <!-- car park block -->
+        <rect x="40" y="40" width="820" height="120" rx="10" fill="#0e1622" stroke="#1f2a3d"/>
+        <text x="60" y="105" fill="#8a99b5" font-family="monospace" font-size="14">CAR PARK — bays, free 30 min</text>
+        <!-- two lanes -->
+        <rect x="300" y="200" width="120" height="140" fill="#11161f" stroke="#2a3650"/>
+        <rect x="480" y="200" width="120" height="140" fill="#11161f" stroke="#2a3650"/>
+        <text x="312" y="356" fill="#33d6a6" font-family="monospace" font-size="13">ENTRY →</text>
+        <text x="500" y="356" fill="#ffb020" font-family="monospace" font-size="13">← EXIT</text>
+        <!-- entry cam -->
+        <g transform="translate(430,250)">
+          <rect x="0" y="-10" width="24" height="20" rx="4" fill="#16203a" stroke="#34507f"/>
+          <polygon points="0,0 -110,-34 -110,34" fill="#33d6a6" opacity=".18"/>
+          <text x="-6" y="-18" fill="#33d6a6" font-family="monospace" font-size="11">CAM A (entry)</text>
+        </g>
+        <!-- exit cam -->
+        <g transform="translate(470,250)">
+          <rect x="-24" y="-10" width="24" height="20" rx="4" fill="#16203a" stroke="#34507f"/>
+          <polygon points="0,0 110,-34 110,34" fill="#ffb020" opacity=".16"/>
+          <text x="0" y="-18" fill="#ffb020" font-family="monospace" font-size="11">CAM B (exit)</text>
+        </g>
+        <!-- arrows -->
+        <text x="345" y="190" fill="#33d6a6" font-size="22">↑</text>
+        <text x="528" y="190" fill="#ffb020" font-size="22">↓</text>
+        <text x="630" y="250" fill="#8a99b5" font-family="monospace" font-size="12">One unit faces oncoming traffic per direction.</text>
+        <text x="630" y="272" fill="#8a99b5" font-family="monospace" font-size="12">Single combined in/out lane? One camera can do both.</text>
+      </svg>
+    </div>
+
+    <!-- STREET SCENE -->
+    <div class="svgbox" id="v-street" style="display:none">
+      <svg viewBox="0 0 900 360" role="img" aria-label="Street scene with camera and signage">
+        <defs><linearGradient id="skyST" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#101a2e"/><stop offset="1" stop-color="#0a0f1a"/></linearGradient></defs>
+        <rect width="900" height="360" fill="url(#skyST)"/>
+        <!-- buildings -->
+        <rect x="0" y="120" width="160" height="120" fill="#0e1726"/><rect x="700" y="100" width="200" height="140" fill="#0e1726"/>
+        <!-- road -->
+        <polygon points="280,360 620,360 520,200 380,200" fill="#11161f"/>
+        <polygon points="448,360 452,360 451,200 449,200" fill="#33415c"/>
+        <line x1="446" y1="330" x2="454" y2="330" stroke="#475a7d" stroke-width="3"/>
+        <line x1="444" y1="290" x2="456" y2="290" stroke="#475a7d" stroke-width="3"/>
+        <!-- entrance sign -->
+        <rect x="600" y="150" width="120" height="84" rx="6" fill="#0c1c14" stroke="#33d6a6"/>
+        <text x="612" y="174" fill="#33d6a6" font-family="monospace" font-size="13">P · FREE</text>
+        <text x="612" y="194" fill="#eaf0fb" font-family="monospace" font-size="12">30 mins</text>
+        <text x="612" y="212" fill="#ff5470" font-family="monospace" font-size="11">then £100</text>
+        <text x="612" y="228" fill="#8a99b5" font-family="monospace" font-size="9">ANPR in use</text>
+        <rect x="654" y="234" width="6" height="60" fill="#222c40"/>
+        <!-- pole + camera -->
+        <rect x="250" y="130" width="10" height="160" fill="#1a2336" stroke="#2a3650"/>
+        <g><rect x="236" y="150" width="48" height="30" rx="6" fill="#16203a" stroke="#34507f"/>
+          <circle cx="280" cy="165" r="8" fill="#0a1a2b" stroke="#5b8cff" stroke-width="2"/></g>
+        <polygon points="284,164 470,250 470,286 284,180" fill="#5b8cff" opacity=".14"/>
+        <text x="210" y="124" fill="#8a99b5" font-family="monospace" font-size="11">PG-1 on existing lamp post</text>
+        <!-- car entering -->
+        <g transform="translate(380,250)">
+          <rect x="0" y="0" width="120" height="44" rx="10" fill="#cdd6e8"/>
+          <rect x="24" y="-16" width="70" height="22" rx="9" fill="#aab6cf"/>
+          <rect x="86" y="30" width="32" height="14" rx="3" fill="#f7d038" stroke="#111"/>
+          <text x="90" y="41" font-family="monospace" font-size="9" fill="#111" font-weight="bold">LM26</text>
+        </g>
+        <text x="40" y="340" fill="#8a99b5" font-family="monospace" font-size="12">Compliant signage at the entrance + at the pay point is a legal must — the driver must be able to read the terms before parking.</text>
+      </svg>
+    </div>
+
+    <div class="legend">
+      <span><i style="background:#33d6a6"></i>Entry camera / capture cone</span>
+      <span><i style="background:#ffb020"></i>Exit camera / height</span>
+      <span><i style="background:#5b8cff"></i>Lens line / tilt angle</span>
+    </div>
+  </div>
+
+  <h3 style="margin:26px 0 4px;font-size:18px">How a site actually gets kitted out</h3>
+  <p class="mut" style="margin:0 0 14px;font-size:14px">Four mounting routes, cheapest effort first:</p>
+  <div class="mountgrid">
+    <div class="mtile"><div class="mi">💡</div><h4>Existing lamp post</h4><p>Strap/clamp the unit to a post already at the entrance. No groundwork. Power from the column where allowed.</p></div>
+    <div class="mtile"><div class="mi">🧱</div><h4>Wall mount</h4><p>Bolt to a wall or gatepost beside the lane at plate height. Run a single PoE cable back indoors.</p></div>
+    <div class="mtile"><div class="mi">🚧</div><h4>New short pole</h4><p>Concrete a 1.2 m galvanised post beside the lane. Most controllable angle; small civils job.</p></div>
+    <div class="mtile"><div class="mi">📶</div><h4>Solar + 4G</h4><p>No mains/cabling? Battery + solar lid + 4G SIM makes it fully wireless for remote sites.</p></div>
+  </div>
+
+  <div class="steps" style="margin-top:18px;grid-template-columns:repeat(5,1fr)">
+    <div class="step"><div class="num">Day 0</div><h4>Site survey</h4><p>Check entrance width, lighting, lane direction, power, mobile signal, sign positions.</p></div>
+    <div class="step"><div class="num">Day 1</div><h4>Mount</h4><p>Fix unit beside each lane at ~1.2 m, aimed at the plate line; install signage.</p></div>
+    <div class="step"><div class="num">Day 1</div><h4>Power + connect</h4><p>PoE cable, or 12 V + 4G. Unit boots, finds the cloud, self-tests reads.</p></div>
+    <div class="step"><div class="num">Day 1</div><h4>Calibrate</h4><p>Drive a known plate through. Tune angle/zoom until confidence sits ≥ 95%.</p></div>
+    <div class="step"><div class="num">Live</div><h4>Go live</h4><p>Set the 30-min rule + whitelist. Charges flow through the platform automatically.</p></div>
+  </div>
+</div></section>
+
+<!-- DEMO -->
+<section id="demo"><div class="wrap">
+  <div class="sec-head"><p class="eyebrow">Interactive</p><h2>Watch a stay get judged</h2>
+    <p>Set the free window and how long the driver stays, then send the car through. (Demo speed: 1 second ≈ 1 parked minute.)</p></div>
+  <div class="sim">
+    <div class="road" id="road">
+      <div class="lane"></div>
+      <div class="gantry" id="gantry"><div class="gcam"></div><div class="beam"></div></div>
+      <div class="capture" id="capture">READING…</div>
+      <div class="car" id="car"><div class="roof"></div><div class="body"></div><div class="plate">LM26 PGX</div><div class="wheel w1"></div><div class="wheel w2"></div></div>
+    </div>
+    <div class="panelgrid">
+      <div class="tile"><div class="lab">Free window</div><div class="big" id="freeval">30 min</div><input id="freerange" type="range" min="10" max="120" step="5" value="30"></div>
+      <div class="tile"><div class="lab">Driver stays</div><div class="big" id="stayval">45 min</div><input id="stayrange" type="range" min="5" max="180" step="5" value="45"></div>
+      <div class="tile"><div class="lab">Measured duration</div><div class="big" id="durval">—</div><div class="verdict idle" id="verdict">Awaiting exit read</div></div>
+      <div class="tile"><div class="lab">Outcome</div><div class="big" id="chargeval">—</div><div class="verdict idle" id="chargenote">No vehicle processed yet</div></div>
+    </div>
+    <div class="simbtns"><button class="btn primary" id="runbtn">▶ Send car through</button><button class="btn" id="resetbtn">Reset</button></div>
+    <div class="log" id="log"><div><span class="t">[system]</span> PlateGate edge unit online · engine ready · DVLA link OK</div></div>
+  </div>
+</div></section>
+
+<!-- KIT -->
+<section id="need"><div class="wrap">
+  <div class="sec-head"><p class="eyebrow">Bill of materials + stack</p><h2>What you actually need to build it</h2>
+    <p>Three layers: the camera unit at the kerb, the platform that pairs reads and bills, and the UK legal/data plumbing that makes a charge enforceable. <span class="vref">✓ verified</span> = confirmed in the research; others are sensible build estimates.</p></div>
+  <div class="cards">
+    <div class="card"><h3><span class="ic">📷</span> Camera unit (per lane)</h3><ul>
+      <li>5MP global-shutter IR camera, 850nm, 0.1 Lux <span>≈ £120 ✓</span></li>
+      <li>Varifocal lens (frame the plate line) <span>£20–60</span></li>
+      <li>Edge compute — Raspberry Pi 5 or Jetson <span>£60–500</span></li>
+      <li>IP66/67 weather enclosure + mount <span>£30–120</span></li>
+      <li>PoE / 12V power + 4G or Wi-Fi <span>£20–80</span></li>
+      <li>Or buy an all-in-one ANPR camera <span class="tag">Hikvision / Dahua</span></li>
+    </ul></div>
+    <div class="card"><h3><span class="ic">⚙️</span> Software platform</h3><ul>
+      <li>ANPR engine (read the plate) <span>DIY / paid</span></li>
+      <li>Entry/exit pairing + overstay logic <span>your code</span></li>
+      <li>Cloud backend + database <span>SaaS</span></li>
+      <li>Operator dashboard + appeals portal <span>web app</span></li>
+      <li>Payment + charge-notice workflow <span>Stripe + post</span></li>
+      <li>Whitelist (staff/permits) &amp; reporting <span>config</span></li>
+    </ul></div>
+    <div class="card"><h3><span class="ic">⚖️</span> UK compliance</h3><ul>
+      <li>BPA <em>or</em> IPC accredited membership <span>mandatory ✓</span></li>
+      <li>DVLA KADOE keeper lookup <span>£2.50/req ✓</span></li>
+      <li>POFA 2012 compliant notices <span>to charge keeper</span></li>
+      <li>ICO registration + UK GDPR / DPIA <span>required</span></li>
+      <li>ICO surveillance / CCTV code <span>required</span></li>
+      <li>Compliant entrance + tariff signage <span>on site ✓</span></li>
+    </ul></div>
+  </div>
+  <div class="note"><b>The camera is the easy 20%.</b> In the UK you can't get a keeper's address from the DVLA, and can't reliably enforce a charge, unless you're a member of an Accredited Operator Scheme (BPA or IPC) and follow POFA 2012. The scheme membership, signage and data protection are the 80% that make this a real, sellable business.</div>
+</div></section>
+
+<!-- AI -->
+<section id="tech"><div class="wrap">
+  <div class="sec-head"><p class="eyebrow">The recognition engine</p><h2>Build the AI vs buy a plate engine</h2>
+    <p>The single biggest build decision. Both work; they trade money against effort and liability.</p></div>
+  <div class="scroll-x"><table>
+    <thead><tr><th>Factor</th><th>DIY / open-source AI</th><th>Paid ANPR engine</th></tr></thead>
+    <tbody>
+      <tr><td>Examples</td><td>OpenALPR, YOLO + OCR, Frigate, Fast-ALPR</td><td>Plate Recognizer, Hikvision/Dahua, Genetec, Vaxtor</td></tr>
+      <tr><td>Up-front cost</td><td><span class="pill good">Low / free</span></td><td><span class="pill mid">From ~$35/cam/mo ✓</span></td></tr>
+      <tr><td>Accuracy out of box</td><td><span class="pill mid">Good, needs tuning</span></td><td><span class="pill good">High, UK-tuned</span></td></tr>
+      <tr><td>Engineering effort</td><td><span class="pill bad">High (you own it)</span></td><td><span class="pill good">Low (SDK/API)</span></td></tr>
+      <tr><td>Runs on edge?</td><td><span class="pill good">Yes (Pi/Jetson)</span></td><td><span class="pill good">Yes — Jetson, ~250ms ✓</span></td></tr>
+      <tr><td>Best when</td><td>Margin matters, you have ML skill, scale</td><td>Speed to market, fewer headaches</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><b>Pragmatic path:</b> prototype with Plate Recognizer (free tier = 2,500 reads/month, then $50/mo for 50k, $150/mo for 250k, $250/mo for 500k <span class="vref">✓ verified</span>; or their Stream product at ~$35/cam/mo) to prove the product and win first customers — then migrate the hot path to your own edge model once volume justifies it.</div>
+</div></section>
+
+<!-- LEGAL -->
+<section id="legal"><div class="wrap">
+  <div class="sec-head"><p class="eyebrow">UK rulebook</p><h2>From "photo of a plate" to "enforceable charge"</h2>
+    <p>Figures below are from official/industry sources; the verify pass got rate-limited on the legal claims, so treat them as well-sourced but worth a final solicitor check.</p></div>
+  <div class="steps" style="grid-template-columns:repeat(4,1fr)">
+    <div class="step"><div class="num">A</div><h4>Join a scheme</h4><p>Become a member of the <b>BPA</b> or <b>IPC</b>. Required before the DVLA will share keeper data. ✓</p></div>
+    <div class="step"><div class="num">B</div><h4>Get DVLA KADOE</h4><p>Electronic keeper lookup — about <b>£2.50 per request</b>, charged even for "no trace". ✓</p></div>
+    <div class="step"><div class="num">C</div><h4>Follow POFA 2012</h4><p>Serve the Notice to Keeper in the right window/format so the keeper is liable if the driver is unknown.</p></div>
+    <div class="step"><div class="num">D</div><h4>Protect the data</h4><p>ICO registration, DPIA, surveillance code, minimal retention, a real appeals route.</p></div>
+  </div>
+  <div class="note"><b>Single Code of Practice (BPA/IPC):</b> parking charges capped around <b>£100</b>, with a <b>~40% reduction</b> for prompt payment, plus a mandatory <b>grace period</b> on top of a minimum consideration period before any charge bites. Build these limits into your platform from day one.</div>
+</div></section>
+
+<!-- COSTS -->
+<section id="cost"><div class="wrap">
+  <div class="sec-head"><p class="eyebrow">The money</p><h2>What it costs to run</h2>
+    <p>Indicative for a sellable product. <span class="vref">✓</span> marks figures confirmed in the research.</p></div>
+  <div class="scroll-x"><table>
+    <thead><tr><th>Item</th><th>Cost</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>ANPR camera module (5MP global shutter, IR)</td><td>≈ £120 / unit <span class="vref">✓</span></td><td>Plus lens, compute, enclosure → ~£250–700 built per lane</td></tr>
+      <tr><td>Edge compute (Jetson Nano class)</td><td>~£100–250</td><td>Runs a paid SDK at ~250ms/read <span class="vref">✓</span></td></tr>
+      <tr><td>Plate Recognizer — Snapshot API</td><td>$0 → $50 → $150 → $250 /mo <span class="vref">✓</span></td><td>2,500 / 50k / 250k / 500k reads per month</td></tr>
+      <tr><td>Plate Recognizer — Stream (per camera)</td><td>$35–45 /cam/mo <span class="vref">✓</span></td><td>+MMC = make/model/colour/dwell</td></tr>
+      <tr><td>DVLA KADOE keeper lookup</td><td>≈ £2.50 / request <span class="vref">✓</span></td><td>Charged even on "no trace"</td></tr>
+      <tr><td>BPA / IPC membership</td><td>Annual fee</td><td>Mandatory for keeper data <span class="vref">✓</span></td></tr>
+      <tr><td>Cloud SaaS hosting + payments</td><td>Ongoing</td><td>Backend, dashboard, Stripe fees, postage on notices</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><b>Where your margin comes from:</b> sell the hardware once, then charge the car-park owner a monthly SaaS fee per site/lane, and/or take a slice of each enforced charge. Your costs per charge are mostly the £2.50 DVLA lookup + postage + payment fees — everything above that is margin.</div>
+</div></section>
+
+<footer><div class="wrap">
+  <strong>PlateGate</strong> — concept mockup built for Kishan · ANPR free-parking product (UK). Figures marked ✓ are triple-verified from the research run; legal figures are well-sourced but not independently re-verified (verify step was rate-limited). Not legal advice — confirm BPA/IPC, DVLA KADOE and ICO/POFA requirements before trading.
+</div></footer>
+
+<script>
+  const $=id=>document.getElementById(id);
+  const go=id=>$(id).scrollIntoView({behavior:'smooth'});
+  // install view switch
+  function setView(v){
+    ['side','top','street'].forEach(x=>{$('v-'+x).style.display = x===v?'block':'none';});
+    document.querySelectorAll('.stab').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  }
+  // demo
+  const free=$('freerange'), stay=$('stayrange'), log=$('log'); let busy=false;
+  function sync(){ $('freeval').textContent=free.value+' min'; $('stayval').textContent=stay.value+' min'; }
+  free.oninput=sync; stay.oninput=sync; sync();
+  function line(html){ const d=document.createElement('div'); d.innerHTML=html; log.prepend(d); }
+  function stamp(){ return '<span class="t">['+new Date().toLocaleTimeString()+']</span> '; }
+  function reset(){
+    $('car').style.transition='none'; $('car').style.left='-90px';
+    $('gantry').classList.remove('scan'); $('capture').classList.remove('show');
+    $('durval').textContent='—'; $('chargeval').textContent='—'; $('chargeval').style.color='';
+    $('verdict').className='verdict idle'; $('verdict').textContent='Awaiting exit read';
+    $('chargenote').className='verdict idle'; $('chargenote').textContent='No vehicle processed yet';
+    log.innerHTML='<div><span class="t">[system]</span> PlateGate edge unit online · engine ready · DVLA link OK</div>';
+  }
+  $('resetbtn').onclick=()=>{ if(!busy) reset(); };
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  function captureAt(label){return new Promise(res=>{
+    $('gantry').classList.add('scan'); $('capture').classList.add('show'); $('capture').textContent='READING…';
+    setTimeout(()=>{ $('capture').textContent='✓ LM26 PGX';
+      line(stamp()+'<span class="g">'+label+'</span> plate <b>LM26 PGX</b> · confidence 98.7%');
+      setTimeout(()=>{ $('gantry').classList.remove('scan'); $('capture').classList.remove('show'); res(); },650);},850);});}
+  $('runbtn').onclick=async()=>{
+    if(busy) return; busy=true; reset(); const car=$('car'); const f=+free.value, s=+stay.value;
+    await wait(60); car.style.transition='left 2.6s cubic-bezier(.45,0,.3,1)'; car.style.left='44%'; await wait(1300);
+    line(stamp()+'Vehicle detected at <span class="g">ENTRY</span> lane'); await captureAt('ENTRY');
+    line(stamp()+'Entry record written · timer started ('+f+' min free)');
+    car.style.left='115%'; await wait(2100);
+    line(stamp()+'<span class="a">Vehicle parked · '+s+' min elapsed (simulated)</span>');
+    car.style.transition='none'; car.style.left='-90px'; await wait(120);
+    car.style.transition='left 2.6s cubic-bezier(.45,0,.3,1)'; car.style.left='44%'; await wait(1300);
+    line(stamp()+'Vehicle detected at <span class="g">EXIT</span> lane'); await captureAt('EXIT');
+    $('durval').textContent=s+' min'; const over=s-f;
+    if(s<=f){
+      $('verdict').className='verdict ok'; $('verdict').textContent='✓ Within free '+f+'-min window';
+      $('chargeval').textContent='£0.00'; $('chargeval').style.color='var(--acc)';
+      $('chargenote').className='verdict ok'; $('chargenote').textContent='No charge — barrier-free exit';
+      line(stamp()+'<span class="g">PAIRED ✓ '+s+' min ≤ '+f+' min → FREE. No charge.</span>');
+    }else{
+      $('verdict').className='verdict charge'; $('verdict').textContent='⚠ Overstay by '+over+' min';
+      $('chargeval').textContent='£100'; $('chargeval').style.color='var(--red)';
+      $('chargenote').className='verdict charge'; $('chargenote').textContent='Charge raised → DVLA lookup → POFA notice';
+      line(stamp()+'<span class="r">PAIRED ⚠ '+s+' min > '+f+' min → OVERSTAY.</span>');
+      line(stamp()+'<span class="r">→ KADOE keeper lookup (£2.50) → POFA Notice to Keeper queued</span>');
+    }
+    car.style.left='115%'; await wait(2100); busy=false;
+  };
+</script>
+</body>
+</html>
