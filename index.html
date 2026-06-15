@@ -170,6 +170,7 @@
     <a href="#tech">AI</a>
     <a href="#legal">UK&nbsp;rules</a>
     <a href="#cost">Costs</a>
+    <a href="#gtm">Sell&nbsp;it</a>
   </div>
 </div></nav>
 
@@ -441,14 +442,14 @@
 <!-- LEGAL -->
 <section id="legal"><div class="wrap">
   <div class="sec-head"><p class="eyebrow">UK rulebook</p><h2>From "photo of a plate" to "enforceable charge"</h2>
-    <p>Figures below are from official/industry sources; the verify pass got rate-limited on the legal claims, so treat them as well-sourced but worth a final solicitor check.</p></div>
+    <p>Figures below are verified against the <b>BPA/IPC Single Code of Practice v1.1 (Feb 2025)</b> and DVLA. Still take final legal advice before trading.</p></div>
   <div class="steps" style="grid-template-columns:repeat(4,1fr)">
     <div class="step"><div class="num">A</div><h4>Join a scheme</h4><p>Become a member of the <b>BPA</b> or <b>IPC</b>. Required before the DVLA will share keeper data. ✓</p></div>
     <div class="step"><div class="num">B</div><h4>Get DVLA KADOE</h4><p>Electronic keeper lookup — about <b>£2.50 per request</b>, charged even for "no trace". ✓</p></div>
     <div class="step"><div class="num">C</div><h4>Follow POFA 2012</h4><p>Serve the Notice to Keeper in the right window/format so the keeper is liable if the driver is unknown.</p></div>
     <div class="step"><div class="num">D</div><h4>Protect the data</h4><p>ICO registration, DPIA, surveillance code, minimal retention, a real appeals route.</p></div>
   </div>
-  <div class="note"><b>Single Code of Practice (BPA/IPC):</b> parking charges capped around <b>£100</b>, with a <b>~40% reduction</b> for prompt payment, plus a mandatory <b>grace period</b> on top of a minimum consideration period before any charge bites. Build these limits into your platform from day one.</div>
+  <div class="note"><b>Single Code of Practice (BPA + IPC, v1.1 Feb 2025):</b> the parking charge is capped at <b>£100</b>, reduced to <b>£60 if paid within 14 days</b>, plus a mandatory <b>10-minute grace period</b> at the end of the stay before a charge can bite <span class="vref">✓ verified</span>. New operators apply it now; existing sites must comply by Dec 2026. Build these limits into your platform from day one.</div>
 </div></section>
 
 <!-- COSTS -->
@@ -470,8 +471,46 @@
   <div class="note"><b>Where your margin comes from:</b> sell the hardware once, then charge the car-park owner a monthly SaaS fee per site/lane, and/or take a slice of each enforced charge. Your costs per charge are mostly the £2.50 DVLA lookup + postage + payment fees — everything above that is margin.</div>
 </div></section>
 
+<!-- GO TO MARKET -->
+<section id="gtm"><div class="wrap">
+  <div class="sec-head"><p class="eyebrow">Selling it</p><h2>How you actually make money</h2>
+    <p>You're not selling a camera — you're selling car-park owners <b>free staff-free enforcement</b> that protects their spaces and turns overstays into revenue. Three ways to charge them, usually stacked.</p></div>
+  <div class="cards">
+    <div class="card"><h3><span class="ic">📦</span> 1 · Sell the kit</h3>
+      <p class="mut" style="font-size:13px;margin:6px 0 0">One-off hardware + install fee per lane. Covers your build cost up front and filters out tyre-kickers.</p>
+      <ul><li>Built unit cost <span>~£250–700</span></li><li>Sell price / lane <span>£900–1,800</span></li><li>Install <span>£150–400</span></li></ul></div>
+    <div class="card"><h3><span class="ic">🔁</span> 2 · Monthly SaaS</h3>
+      <p class="mut" style="font-size:13px;margin:6px 0 0">Recurring fee per site/lane for the platform, ANPR engine, dashboard, hosting and support. The real business.</p>
+      <ul><li>Per lane / month <span>£40–120</span></li><li>Your engine cost <span>~$35/cam ✓</span></li><li>Gross margin <span>high</span></li></ul></div>
+    <div class="card"><h3><span class="ic">⚖️</span> 3 · Share of charges</h3>
+      <p class="mut" style="font-size:13px;margin:6px 0 0">Take a cut of each enforced overstay charge (or run enforcement fully and pay the owner a rebate).</p>
+      <ul><li>Charge to driver <span>up to £100</span></li><li>Your cost / charge <span>~£3.50</span></li><li>Split with owner <span>50/50 typ.</span></li></ul></div>
+  </div>
+
+  <h3 style="margin:24px 0 10px;font-size:18px">Unit economics of a single overstay charge</h3>
+  <div class="scroll-x"><table>
+    <thead><tr><th>Line</th><th>Amount</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Charge issued to driver</td><td>£100</td><td>Code cap; £60 if paid in 14 days <span class="vref">✓</span></td></tr>
+      <tr><td>— DVLA KADOE lookup</td><td>−£2.50 <span class="vref">✓</span></td><td>Charged even on "no trace"</td></tr>
+      <tr><td>— Postage (Notice to Keeper)</td><td>−£1.00</td><td>POFA-compliant letter</td></tr>
+      <tr><td>— Payment + admin</td><td>−£2.00</td><td>Card fees, processing</td></tr>
+      <tr><td><b>Contribution per paid charge</b></td><td><b>≈ £54–94</b></td><td>Before SaaS/owner split</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 style="margin:24px 0 10px;font-size:18px">Who buys it</h3>
+  <div class="mountgrid">
+    <div class="mtile"><div class="mi">🛒</div><h4>Retail parks &amp; shops</h4><p>Want 30–90 min free for customers, but stop commuters/all-dayers hogging bays.</p></div>
+    <div class="mtile"><div class="mi">🍔</div><h4>Fast food &amp; cafés</h4><p>Free for diners, charge the school-run park-and-walk-off crowd.</p></div>
+    <div class="mtile"><div class="mi">🏨</div><h4>Hotels, gyms, dentists</h4><p>Small private car parks with no staff — perfect for self-running enforcement.</p></div>
+    <div class="mtile"><div class="mi">🏢</div><h4>Landlords &amp; estates</h4><p>Permit/whitelist their tenants, charge everyone else automatically.</p></div>
+  </div>
+  <div class="note"><b>Wedge to win first sites:</b> offer a free 30-day trial on one lane using a paid ANPR API (so zero build risk), prove how many overstays it catches, then convert to a paid SaaS + charge-share contract. Land a handful of local sites, build the brand and BPA/IPC track record, then scale.</div>
+</div></section>
+
 <footer><div class="wrap">
-  <strong>PlateGate</strong> — concept mockup built for Kishan · ANPR free-parking product (UK). Figures marked ✓ are triple-verified from the research run; legal figures are well-sourced but not independently re-verified (verify step was rate-limited). Not legal advice — confirm BPA/IPC, DVLA KADOE and ICO/POFA requirements before trading.
+  <strong>PlateGate</strong> — concept mockup built for Kishan · ANPR free-parking product (UK). Figures marked ✓ are verified against DVLA, Plate Recognizer and the BPA/IPC Single Code of Practice v1.1 (Feb 2025). Not legal advice — confirm BPA/IPC, DVLA KADOE and ICO/POFA requirements before trading.
 </div></footer>
 
 <script>
